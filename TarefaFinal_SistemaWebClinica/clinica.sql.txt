@@ -1,0 +1,222 @@
+clinica.sql 🙏🙏🙏🙏🙏🙏
+
+
+
+
+CREATE DATABASE IF NOT EXISTS clinica;
+
+USE clinica;
+
+CREATE TABLE IF NOT EXISTS convenio (
+    id_convenio INT NOT NULL AUTO_INCREMENT,
+    nome VARCHAR(100) NOT NULL,
+    telefone VARCHAR(20),
+    percentual_desconto DECIMAL(5,2) DEFAULT 0.00,
+    PRIMARY KEY (id_convenio)
+);
+
+CREATE TABLE IF NOT EXISTS paciente (
+    id_paciente INT NOT NULL AUTO_INCREMENT,
+    nome VARCHAR(150) NOT NULL,
+    cpf VARCHAR(14) NOT NULL UNIQUE,
+    data_nacimento DATE NOT NULL,
+    telefone VARCHAR(20),
+    Email VARCHAR(150),
+    endereco VARCHAR(200),
+    cidade VARCHAR(100),
+    id_convenio INT,
+    PRIMARY KEY (id_paciente),
+    FOREIGN KEY (id_convenio)
+        REFERENCES convenio(id_convenio)
+);
+
+CREATE TABLE IF NOT EXISTS medico (
+    id_medico INT NOT NULL AUTO_INCREMENT,
+    nome VARCHAR(150) NOT NULL,
+    crm VARCHAR(20) NOT NULL UNIQUE,
+    especialidade VARCHAR(100) NOT NULL,
+    telefone VARCHAR(20),
+    Email VARCHAR(150),
+    valor_consulta DECIMAL(10,2),
+    foto VARCHAR(255),
+    PRIMARY KEY (id_medico)
+);
+
+CREATE TABLE IF NOT EXISTS consulta (
+    id_consulta INT NOT NULL AUTO_INCREMENT,
+    id_paciente INT NOT NULL,
+    id_medico INT NOT NULL,
+    data_consulta DATE NOT NULL,
+    horario TIME NOT NULL,
+    motivo VARCHAR(200),
+    observacoes TEXT,
+    status VARCHAR(30) NOT NULL DEFAULT 'Agendada',
+    PRIMARY KEY (id_consulta),
+    FOREIGN KEY (id_paciente)
+        REFERENCES paciente(id_paciente),
+    FOREIGN KEY (id_medico)
+        REFERENCES medico(id_medico)
+);
+
+CREATE TABLE IF NOT EXISTS exame (
+    id_exame INT NOT NULL AUTO_INCREMENT,
+    id_paciente INT NOT NULL,
+    id_consulta INT DEFAULT NULL,
+    nome VARCHAR(100) NOT NULL,
+    data_solicitacao DATE NOT NULL,
+    data_realizacao DATE DEFAULT NULL,
+    resultado VARCHAR(500),
+    status_ VARCHAR(30) NOT NULL DEFAULT 'solicitado',
+    valor DECIMAL(10,2),
+    PRIMARY KEY (id_exame),
+    FOREIGN KEY (id_paciente)
+        REFERENCES paciente(id_paciente),
+    FOREIGN KEY (id_consulta)
+        REFERENCES consulta(id_consulta)
+);
+
+
+
+
+consultas.sql 🙏🙏🙏🙏🙏🙏v
+
+
+
+
+
+USE clinica;
+
+SHOW TABLES;
+
+SELECT * FROM paciente;
+
+SELECT * FROM medico;
+
+SELECT * FROM convenio;
+
+SELECT
+    c.id_consulta,
+    p.nome AS paciente,
+    m.nome AS medico,
+    m.especialidade,
+    c.data_consulta,
+    c.horario,
+    c.status
+FROM consulta c
+INNER JOIN paciente p
+    ON c.id_paciente = p.id_paciente
+INNER JOIN medico m
+    ON c.id_medico = m.id_medico
+ORDER BY c.data_consulta, c.horario;
+
+SELECT
+    p.nome AS paciente,
+    p.telefone,
+    p.cidade,
+    cv.nome AS convenio,
+    cv.percentual_desconto
+FROM paciente p
+LEFT JOIN convenio cv
+    ON p.id_convenio = cv.id_convenio;
+
+SELECT
+    e.id_exame,
+    e.nome AS exame,
+    p.nome AS paciente,
+    e.data_solicitacao,
+    e.data_realizacao,
+    e.status_,
+    e.valor
+FROM exame e
+INNER JOIN paciente p
+    ON e.id_paciente = p.id_paciente;
+
+SELECT
+    e.nome AS exame,
+    p.nome AS paciente,
+    c.data_consulta,
+    c.horario,
+    e.status_
+FROM exame e
+INNER JOIN paciente p
+    ON e.id_paciente = p.id_paciente
+LEFT JOIN consulta c
+    ON e.id_consulta = c.id_consulta;
+
+SELECT
+    m.nome AS medico,
+    COUNT(c.id_consulta) AS total_consultas
+FROM medico m
+LEFT JOIN consulta c
+    ON m.id_medico = c.id_medico
+GROUP BY m.id_medico, m.nome
+ORDER BY total_consultas DESC;
+
+SELECT *
+FROM consulta
+WHERE status = 'Agendada'
+ORDER BY data_consulta, horario;
+
+
+
+
+Cadastros🙏🙏🙏🙏🙏
+
+
+
+USE clinica;
+
+INSERT INTO convenio
+(nome, telefone, percentual_desconto)
+VALUES
+('Unimed', '3432221000', 15.00),
+('Amil', '3432222000', 10.00),
+('Bradesco Saude', '3432223000', 12.00),
+('Particular', NULL, 0.00);
+
+INSERT INTO paciente
+(nome, cpf, data_nacimento, telefone, Email, endereco, cidade, id_convenio)
+VALUES
+('Joao Silva', '111.111.111-11', '1995-05-12', '34999991111', 'joao@email.com', 'Rua das Flores, 100', 'Uberlandia', 1),
+('Maria Santos', '222.222.222-22', '2000-08-20', '34999992222', 'maria@email.com', 'Rua das Palmeiras, 200', 'Uberlandia', 2),
+('Pedro Oliveira', '333.333.333-33', '1988-03-15', '34999993333', 'pedro@email.com', 'Av. Brasil, 300', 'Uberlandia', 3),
+('Ana Costa', '444.444.444-44', '1999-11-02', '34999994444', 'ana@email.com', 'Rua Central, 400', 'Uberlandia', 1),
+('Lucas Pereira', '555.555.555-55', '1992-07-25', '34999995555', 'lucas@email.com', 'Rua das Acacias, 500', 'Uberlandia', 4);
+
+INSERT INTO medico
+(nome, crm, especialidade, telefone, Email, valor_consulta)
+VALUES
+('Dr. House', 'CRM-MG-10001', 'Clinica Geral', '34988881111', 'house@clinica.com', 250.00),
+('Dra. Gineco Meme', 'CRM-MG-10002', 'Ginecologia', '34988882222', 'gineco@clinica.com', 220.00),
+('Dr. Calabreso', 'CRM-MG-10003', 'Cardiologia', '34988883333', 'calabreso@clinica.com', 300.00),
+('Dra. Irinilda', 'CRM-MG-10004', 'Dermatologia', '34988884444', 'irinilda@clinica.com', 200.00),
+('Dr. Lula Molusco', 'CRM-MG-10005', 'Pediatria', '34988885555', 'lula@clinica.com', 180.00);
+
+INSERT INTO consulta
+(id_paciente, id_medico, data_consulta, horario, motivo, observacoes, status)
+VALUES
+(1, 1, '2026-11-05', '08:00:00', 'Consulta de rotina', 'Paciente sem queixas graves', 'Agendada'),
+(2, 2, '2026-11-05', '09:00:00', 'Consulta ginecologica', 'Acompanhamento de rotina', 'Agendada'),
+(3, 3, '2026-11-06', '10:30:00', 'Avaliacao cardiologica', 'Solicitar exames complementares', 'Agendada'),
+(4, 4, '2026-11-07', '14:00:00', 'Avaliacao dermatologica', 'Verificar manchas na pele', 'Agendada'),
+(5, 5, '2026-11-08', '15:00:00', 'Consulta pediatrica', 'Consulta de acompanhamento', 'Agendada');
+
+INSERT INTO exame
+(id_paciente, id_consulta, nome, data_solicitacao, data_realizacao, resultado, status_, valor)
+VALUES
+(1, 1, 'Hemograma completo', '2026-11-05', NULL, NULL, 'solicitado', 50.00),
+(2, 2, 'Ultrassom', '2026-11-05', NULL, NULL, 'solicitado', 150.00),
+(3, 3, 'Eletrocardiograma', '2026-11-06', NULL, NULL, 'solicitado', 120.00),
+(4, 4, 'Exame dermatologico', '2026-11-07', NULL, NULL, 'solicitado', 90.00),
+(5, 5, 'Exame de rotina', '2026-11-08', NULL, NULL, 'solicitado', 70.00);
+
+
+
+
+
+
+
+
+
+
+
